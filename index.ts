@@ -4,6 +4,23 @@ import { Tdjson, type Request as TdjsonRequest } from 'tdjson';
 
 const log = debug('tdjson-server').extend('TdjsonClient');
 
+export class TdjsonClientError extends Error {
+	constructor(message: string) {
+		super(message);
+	}
+}
+
+export class TdjsonRequestError extends TdjsonClientError {
+	constructor(
+		message: string,
+		public readonly request: TdjsonRequest,
+	) {
+		super(message);
+	}
+}
+
+export class TdjsonRequestTimeoutError extends TdjsonRequestError {}
+
 export class TdjsonClient extends Tdjson {
 	private readonly _serverBaseUrl: URL;
 	private readonly _clientKey: string;
@@ -135,24 +152,28 @@ export class TdjsonClient extends Tdjson {
 		this._webSocket!.send(message);
 	}
 
-	protected async _request<R extends TdjsonRequest>(message: R): Promise<any> {
+	protected async _request<R extends TdjsonRequest>(messageRaw: R): Promise<any> {
 		this.start();
 
 		const requestId = Math.random().toString(36).slice(2);
 
-		await this._send(JSON.stringify({
-			...message,
+		const message = {
+			...messageRaw,
 			'@extra': {
-				...(message as any)['@extra'],
+				...(messageRaw as any)['@extra'],
 				requestId,
 			},
-		}));
+		};
+
+		const messageString = JSON.stringify(message);
+
+		await this._send(messageString);
 
 		const response = await new Promise<any>((resolve, reject) => {
 			const timeout = setTimeout(() => {
 				this._eventEmitter.removeListener('message', handleMessage);
 
-				reject(new Error('Request timed out'));
+				reject(new TdjsonRequestTimeoutError('Request timed out', message));
 			}, this._requestTimeout);
 
 			const handleMessage = (messageRaw: unknown) => {

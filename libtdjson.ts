@@ -1,8 +1,10 @@
 import { dlopen, FFIType, suffix } from "bun:ffi";
 
-const path = `libtdjson.${suffix}`;
+const {
+	TDJSON_SERVER_LIBTDJSON_PATH = `libtdjson.${suffix}`,
+} = process.env;
 
-export const libtdjson = dlopen(path, {
+export const libtdjson = dlopen(TDJSON_SERVER_LIBTDJSON_PATH, {
 	td_create_client_id: {
 		args: [],
 		returns: FFIType.int,
