@@ -73,11 +73,12 @@ export class TdjsonClient extends Tdjson {
 		};
 
 		const handleOpen = () => {
-			log('Opened');
+			log('Opened', serverUrl.toString());
 			this._sendQueuedMessages();
 		}
 
 		const handleClose = (event: CloseEvent) => {
+			log('Closed', serverUrl.toString(), event.code, event.reason);
 			this.stop();
 
 			if (event.code !== 1000) {
@@ -160,7 +161,8 @@ export class TdjsonClient extends Tdjson {
 		const message = {
 			...messageRaw,
 			'@extra': {
-				...(messageRaw as any)['@extra'],
+				dontExpectResponse: false,
+				...(messageRaw as unknown as { '@extra'?: {}; })['@extra'],
 				requestId,
 			},
 		};
@@ -168,6 +170,10 @@ export class TdjsonClient extends Tdjson {
 		const messageString = JSON.stringify(message);
 
 		await this._send(messageString);
+
+		if (message['@extra'].dontExpectResponse) {
+			return;
+		}
 
 		const response = await new Promise<any>((resolve, reject) => {
 			const timeout = setTimeout(() => {
