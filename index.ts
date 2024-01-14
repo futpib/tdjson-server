@@ -15,7 +15,7 @@ export class TdjsonRequestError extends TdjsonClientError {
 		message: string,
 		public readonly request: TdjsonRequest,
 	) {
-		super(message);
+		super(message + ': ' + request['@type']);
 	}
 }
 
