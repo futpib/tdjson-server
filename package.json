@@ -1,0 +1,17 @@
+{
+  "name": "tdjson-server",
+  "module": "index.ts",
+  "type": "module",
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/debug": "^4.1.12",
+    "tdjson": "^0.0.21"
+  },
+  "peerDependencies": {
+    "tdjson": "^0.0.21",
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "debug": "^4.3.4"
+  }
+}
